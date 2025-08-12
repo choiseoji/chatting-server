@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #chat {
+            width: 500px;
+            margin: 0 auto;
+        }
+        #messages {
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: scroll;
+        }
+        #messageInput {
+            width: 400px;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div id="chat">
+    <h1>WebSocket Chat</h1>
+    <div>
+        <label for="roomId">Room ID: </label>
+        <input type="text" id="roomId" placeholder="Enter room ID">
+    </div>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+    let socket;
+    let roomId = '';
+
+    // WebSocket 연결
+    function connectWebSocket() {
+        roomId = document.getElementById('roomId').value.trim();
+        if (!roomId) {
+            alert('Room ID is required!');
+            return;
+        }
+
+        // WebSocket URL 설정
+        socket = new WebSocket('ws://localhost:8080/ws/conn');
+
+        socket.onopen = function() {
+            console.log('WebSocket 연결 완료');
+            socket.send(JSON.stringify({ roomId: roomId, message: 'joined' }));
+            updateMessages('You have joined the room ' + roomId);
+        };
+
+        socket.onmessage = function(event) {
+            const message = event.data;
+            updateMessages(message);
+        };
+
+        socket.onclose = function() {
+            console.log('WebSocket 연결 종료');
+        };
+    }
+
+    // 메시지 전송
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+
+        if (message && socket && socket.readyState === WebSocket.OPEN) {
+            const messageObject = {
+                roomId: roomId,
+                message: message
+            };
+            socket.send(JSON.stringify(messageObject));
+            messageInput.value = ''; // 메시지 입력창 비우기
+        }
+    }
+
+    // 채팅 메시지 업데이트
+    function updateMessages(message) {
+        const messagesDiv = document.getElementById('messages');
+        const newMessage = document.createElement('div');
+        newMessage.textContent = message;
+        messagesDiv.appendChild(newMessage);
+
+        // 스크롤을 항상 맨 아래로 유지
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // 'Enter' 키로 메시지 전송
+    document.getElementById('messageInput').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // WebSocket 연결 버튼 클릭 시 연결
+    document.getElementById('roomId').addEventListener('change', function() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }
+        connectWebSocket();
+    });
+</script>
+</body>
+</html>

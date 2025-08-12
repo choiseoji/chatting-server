@@ -29,8 +29,13 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// web socket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	// mysql
+	implementation 'mysql:mysql-connector-java:8.0.30'
 }
 
 tasks.named('test') {
